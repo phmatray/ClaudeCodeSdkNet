@@ -1,0 +1,22 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <PackageId>ClaudeCodeSdkNet</PackageId>
+    <Version>1.0.0</Version>
+    <Authors>ClaudeCodeSdkNet Contributors</Authors>
+    <Description>.NET SDK for Claude Code CLI</Description>
+    <PackageProjectUrl>https://github.com/yourusername/ClaudeCodeSdkNet</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/yourusername/ClaudeCodeSdkNet</RepositoryUrl>
+    <PackageTags>claude;ai;cli;sdk</PackageTags>
+    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.Text.Json" Version="9.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="9.0.0" />
+  </ItemGroup>
+
+</Project>
