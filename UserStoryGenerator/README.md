@@ -161,8 +161,31 @@ Generated user stories follow this format:
 ## Requirements
 
 - .NET 9.0 Runtime
-- Claude CLI installed (https://claude.ai/download)
-- Valid Claude API access
+- Claude Code CLI installed (https://claude.ai/download)
+- Valid Claude API key (set as `ANTHROPIC_API_KEY` environment variable)
+
+## API Key Setup
+
+The tool requires an Anthropic API key to function. You have several options:
+
+### Option 1: Environment Variable (Recommended)
+```bash
+export ANTHROPIC_API_KEY="your-api-key-here"
+story-gen generate /path/to/project
+```
+
+### Option 2: Using Nuke Build System
+If you're having trouble with environment variables, use the included Nuke build system:
+
+```bash
+# Setup API key
+./build.sh SetupApiKey --anthropic-api-key "your-api-key-here"
+
+# Run with API key
+./build.sh RunWithApiKey --work-dir "/path/to/project" --template "enhancement"
+```
+
+For more details on API key management with Nuke, see [NUKE_API_KEY_MANAGEMENT.md](../docs/NUKE_API_KEY_MANAGEMENT.md).
 
 ## Contributing
 
