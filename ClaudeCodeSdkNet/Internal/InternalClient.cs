@@ -1,6 +1,5 @@
 using System.Runtime.CompilerServices;
 using System.Text.Json;
-using ClaudeCodeSdkNet.Exceptions;
 using ClaudeCodeSdkNet.Transport;
 using ClaudeCodeSdkNet.Types;
 using Microsoft.Extensions.Logging;
@@ -34,7 +33,20 @@ internal class InternalClient
         
         await foreach (var line in transport.StreamJsonLinesAsync(prompt, cancellationToken))
         {
-            Message? message = null;
+            // Skip empty lines
+            if (string.IsNullOrWhiteSpace(line))
+            {
+                continue;
+            }
+
+            // Skip non-JSON lines (like status messages from CLI)
+            if (!line.TrimStart().StartsWith("{") && !line.TrimStart().StartsWith("["))
+            {
+                _logger?.LogDebug("Skipping non-JSON line: {Line}", line);
+                continue;
+            }
+
+            Message? message;
             
             try
             {
@@ -42,12 +54,15 @@ internal class InternalClient
             }
             catch (JsonException ex)
             {
-                throw new CLIJSONDecodeException($"Failed to parse JSON: {ex.Message}", line, ex);
+                _logger?.LogWarning(ex, "Failed to parse JSON line: {Line}", line);
+                // Continue processing instead of throwing
+                continue;
             }
             catch (Exception ex)
             {
-                _logger?.LogError(ex, "Unexpected error parsing message");
-                throw new CLIJSONDecodeException($"Unexpected error parsing message: {ex.Message}", line, ex);
+                _logger?.LogError(ex, "Unexpected error parsing message: {Line}", line);
+                // Continue processing instead of throwing
+                continue;
             }
 
             if (message != null)

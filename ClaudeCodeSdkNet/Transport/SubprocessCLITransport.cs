@@ -24,6 +24,7 @@ public class SubprocessCLITransport : IAsyncDisposable
         _claudePath = claudePath ?? FindClaudeCLI();
         _options = options;
         _logger = logger;
+        _logger?.LogInformation("Using Claude CLI at: {Path}", _claudePath);
     }
 
     private static string FindClaudeCLI()
@@ -38,10 +39,24 @@ public class SubprocessCLITransport : IAsyncDisposable
         }
         else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
         {
-            possiblePaths.Add("/Applications/Claude.app/Contents/MacOS/claude");
-            possiblePaths.Add("/usr/local/bin/claude");
             var home = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+            
+            // Check nvm installations dynamically
+            var nvmPath = Path.Combine(home, ".nvm", "versions", "node");
+            if (Directory.Exists(nvmPath))
+            {
+                var nodeDirs = Directory.GetDirectories(nvmPath);
+                foreach (var nodeDir in nodeDirs.OrderByDescending(d => d)) // Latest version first
+                {
+                    var claudePath = Path.Combine(nodeDir, "bin", "claude");
+                    possiblePaths.Add(claudePath);
+                }
+            }
+            
+            possiblePaths.Add("/usr/local/bin/claude");
             possiblePaths.Add(Path.Combine(home, ".local", "bin", "claude"));
+            // Claude Desktop app last (may not support 'code' subcommand)
+            possiblePaths.Add("/Applications/Claude.app/Contents/MacOS/claude");
         }
         else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
         {
@@ -67,13 +82,19 @@ public class SubprocessCLITransport : IAsyncDisposable
         {
             if (File.Exists(path))
             {
+                // Skip Claude Desktop app if we find Claude Code CLI
+                if (path.Contains("/Applications/Claude.app") && possiblePaths.Any(p => p != path && File.Exists(p)))
+                {
+                    continue;
+                }
                 return path;
             }
         }
 
         throw new CLINotFoundException(
-            "Claude CLI not found. Please ensure Claude is installed. " +
-            "Visit https://claude.ai/download for installation instructions."
+            "Claude Code CLI not found. Please ensure Claude Code (not Claude Desktop) is installed. " +
+            "Install with: npm install -g @anthropic-ai/claude-cli\n" +
+            "Or visit https://docs.anthropic.com/en/docs/claude-code for installation instructions."
         );
     }
 
@@ -133,11 +154,28 @@ public class SubprocessCLITransport : IAsyncDisposable
             if (_process.ExitCode != 0)
             {
                 var stderr = _stderrBuffer.ToString();
-                throw new ProcessException(
-                    $"Claude CLI exited with code {_process.ExitCode}",
-                    _process.ExitCode,
-                    stderr
-                );
+                _logger?.LogError("Claude CLI stderr: {Stderr}", stderr);
+                
+                // Provide more helpful error messages for common issues
+                var errorMessage = $"Claude CLI exited with code {_process.ExitCode}";
+                if (stderr.Contains("ANTHROPIC_API_KEY") || stderr.Contains("API key"))
+                {
+                    errorMessage = "API key not found. Please set ANTHROPIC_API_KEY environment variable";
+                }
+                else if (stderr.Contains("401") || stderr.Contains("Unauthorized"))
+                {
+                    errorMessage = "Invalid API key. Please check your ANTHROPIC_API_KEY";
+                }
+                else if (!string.IsNullOrWhiteSpace(stderr))
+                {
+                    errorMessage = $"{errorMessage}: {stderr}";
+                }
+                
+                throw new ProcessException(errorMessage, _process.ExitCode, stderr);
+            }
+            else if (_stderrBuffer.Length > 0)
+            {
+                _logger?.LogWarning("Claude CLI stderr (exit code 0): {Stderr}", _stderrBuffer.ToString());
             }
         }
         finally

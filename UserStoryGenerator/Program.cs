@@ -1,5 +1,17 @@
+using Spectre.Console;
 using Spectre.Console.Cli;
 using UserStoryGenerator.Commands;
+
+// Check for API key early
+var apiKey = Environment.GetEnvironmentVariable("ANTHROPIC_API_KEY");
+if (string.IsNullOrEmpty(apiKey))
+{
+    AnsiConsole.MarkupLine("[red]Error: ANTHROPIC_API_KEY environment variable is not set[/]");
+    AnsiConsole.MarkupLine("[yellow]Please set your API key:[/]");
+    AnsiConsole.MarkupLine("  [blue]export ANTHROPIC_API_KEY=your-api-key-here[/]");
+    AnsiConsole.MarkupLine("[dim]Get your API key from: https://console.anthropic.com/account/keys[/]");
+    return 1;
+}
 
 var app = new CommandApp();
 

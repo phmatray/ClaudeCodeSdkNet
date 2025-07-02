@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
+using System.Text;
 using ClaudeCodeSdkNet.Types;
 using Spectre.Console;
 using Spectre.Console.Cli;
@@ -7,6 +8,15 @@ using UserStoryGenerator.Models;
 using UserStoryGenerator.Services;
 
 namespace UserStoryGenerator.Commands;
+
+public static class StringExtensions
+{
+    public static string Truncate(this string value, int maxLength)
+    {
+        if (string.IsNullOrEmpty(value)) return value;
+        return value.Length <= maxLength ? value : value.Substring(0, maxLength) + "...";
+    }
+}
 
 public class GenerateCommand : AsyncCommand<GenerateCommand.Settings>
 {
@@ -54,7 +64,7 @@ public class GenerateCommand : AsyncCommand<GenerateCommand.Settings>
         public bool Quiet { get; init; }
     }
 
-    public override async Task<int> ExecuteAsync([NotNull] CommandContext context, [NotNull] Settings settings)
+    public override async Task<int> ExecuteAsync(CommandContext context, Settings settings)
     {
         var path = settings.Path ?? Directory.GetCurrentDirectory();
         var outputPath = settings.Output ?? Path.Combine(Directory.GetCurrentDirectory(), "USER_STORIES.md");
@@ -106,35 +116,107 @@ public class GenerateCommand : AsyncCommand<GenerateCommand.Settings>
             ResultMessage? result = null;
             TimeSpan duration = TimeSpan.Zero;
 
-            if (settings.ShowMetrics || !settings.Quiet)
-            {
-                await AnsiConsole.Status()
-                    .Spinner(Spinner.Known.Star)
-                    .StartAsync($"[yellow]Analyzing {Path.GetFileName(path)} and generating user stories...[/]", 
-                    async ctx =>
+            // Use streaming approach with visual feedback
+            var contentBuilder = new StringBuilder();
+            var messageCount = 0;
+            var lastUpdateTime = DateTime.UtcNow;
+            
+            await AnsiConsole.Live(new Panel("[yellow]Initializing...[/]")
+                .Header("[bold]Story Generation Progress[/]")
+                .BorderColor(Color.Blue)
+                .Expand())
+                .StartAsync(async ctx =>
+                {
+                    await foreach (var progress in service.GenerateUserStoriesStreamingAsync(
+                        path,
+                        settings.ProjectType,
+                        template,
+                        settings.CustomPrompt,
+                        settings.Model,
+                        settings.MaxStories))
                     {
-                        var metrics = await service.GenerateWithMetricsAsync(
-                            path,
-                            settings.ProjectType,
-                            template,
-                            settings.CustomPrompt,
-                            settings.Model,
-                            settings.MaxStories);
+                        messageCount = progress.MessageCount;
+                        
+                        switch (progress.Type)
+                        {
+                            case ProgressType.Connecting:
+                                ctx.UpdateTarget(new Panel($"[yellow]{progress.Message}[/]\n\n[dim]Establishing connection to Claude CLI...[/]")
+                                    .Header("[bold]Story Generation Progress[/]")
+                                    .BorderColor(Color.Blue)
+                                    .Expand());
+                                break;
+                                
+                            case ProgressType.System:
+                                ctx.UpdateTarget(new Panel($"[green]Connected![/]\n\n[cyan]{progress.Message}[/]\n[dim]Messages received: {messageCount}[/]")
+                                    .Header("[bold]Story Generation Progress[/]")
+                                    .BorderColor(Color.Green)
+                                    .Expand());
+                                break;
+                                
+                            case ProgressType.Content:
+                                if (!string.IsNullOrEmpty(progress.Content))
+                                {
+                                    contentBuilder.AppendLine(progress.Content);
+                                    
+                                    // Update display only every 500ms to avoid flicker
+                                    if ((DateTime.UtcNow - lastUpdateTime).TotalMilliseconds > 500)
+                                    {
+                                        var preview = GetContentPreview(contentBuilder.ToString());
+                                        ctx.UpdateTarget(new Panel($"[green]Generating user stories...[/]\n\n{preview}\n\n[dim]Messages: {messageCount} | Characters: {contentBuilder.Length:N0}[/]")
+                                            .Header("[bold]Story Generation Progress[/]")
+                                            .BorderColor(Color.Green)
+                                            .Expand());
+                                        lastUpdateTime = DateTime.UtcNow;
+                                    }
+                                }
+                                break;
+                                
+                            case ProgressType.Result:
+                                result = progress.Result;
+                                duration = progress.Duration ?? TimeSpan.Zero;
+                                ctx.UpdateTarget(new Panel($"[green]Generation complete![/]\n\n[dim]Total messages: {messageCount} | Duration: {duration.TotalSeconds:F1}s[/]")
+                                    .Header("[bold]Story Generation Progress[/]")
+                                    .BorderColor(Color.Green)
+                                    .Expand());
+                                break;
+                                
+                            case ProgressType.Complete:
+                                content = progress.Content ?? contentBuilder.ToString();
+                                break;
+                                
+                            case ProgressType.Error:
+                                var errorMessage = progress.Message ?? "Unknown error";
+                                var errorPanel = new Panel($"[red]Error occurred![/]\n\n{errorMessage}");
+                                
+                                // Add specific help for common errors
+                                if (errorMessage.Contains("401") || errorMessage.Contains("Unauthorized"))
+                                {
+                                    errorPanel = new Panel($"[red]Authentication Error![/]\n\n{errorMessage}\n\n[yellow]Please check your API key:[/]\n[blue]export ANTHROPIC_API_KEY=your-api-key-here[/]");
+                                }
+                                else if (errorMessage.Contains("code: 1") || errorMessage.Contains("exit code 1"))
+                                {
+                                    errorPanel = new Panel($"[red]Claude CLI Error![/]\n\n{errorMessage}\n\n[yellow]This often means:[/]\n- API key is not set\n- Claude Desktop is being used instead of Claude Code CLI\n- Network connectivity issues");
+                                }
+                                
+                                errorPanel.Header("[bold]Story Generation Progress[/]")
+                                    .BorderColor(Color.Red)
+                                    .Expand();
+                                    
+                                ctx.UpdateTarget(errorPanel);
+                                break;
+                        }
+                    }
+                });
 
-                        result = metrics.Result;
-                        content = metrics.Content;
-                        duration = metrics.Duration;
-                    });
-            }
-            else
+            // Check if we got any content
+            if (string.IsNullOrWhiteSpace(content))
             {
-                content = await service.GenerateUserStoriesAsync(
-                    path,
-                    settings.ProjectType,
-                    template,
-                    settings.CustomPrompt,
-                    settings.Model,
-                    settings.MaxStories);
+                AnsiConsole.MarkupLine("[yellow]Warning: No user stories were generated. This might be due to:[/]");
+                AnsiConsole.MarkupLine("[yellow]- Claude CLI not responding properly[/]");
+                AnsiConsole.MarkupLine("[yellow]- API key issues[/]");
+                AnsiConsole.MarkupLine("[yellow]- Network connectivity problems[/]");
+                AnsiConsole.MarkupLine("[yellow]Try running with --metrics to see more details[/]");
+                return 1;
             }
 
             // Save the output
@@ -214,5 +296,40 @@ public class GenerateCommand : AsyncCommand<GenerateCommand.Settings>
             }
             return 1;
         }
+    }
+    
+    private static string GetContentPreview(string content)
+    {
+        var lines = content.Split('\n')
+            .Where(line => !string.IsNullOrWhiteSpace(line))
+            .ToList();
+        
+        if (lines.Count == 0)
+            return "[dim]Waiting for content...[/]";
+        
+        var preview = new StringBuilder();
+        var storyCount = lines.Count(l => l.StartsWith("**US-"));
+        
+        if (storyCount > 0)
+        {
+            preview.AppendLine($"[bold cyan]Stories generated: {storyCount}[/]");
+            preview.AppendLine();
+        }
+        
+        // Show last few meaningful lines
+        var lastLines = lines.TakeLast(5).ToList();
+        foreach (var line in lastLines)
+        {
+            if (line.StartsWith("##"))
+                preview.AppendLine($"[yellow]{Markup.Escape(line)}[/]");
+            else if (line.StartsWith("**US-"))
+                preview.AppendLine($"[cyan]{Markup.Escape(line)}[/]");
+            else if (line.StartsWith("- "))
+                preview.AppendLine($"[dim]{Markup.Escape(line)}[/]");
+            else
+                preview.AppendLine($"[gray]{Markup.Escape(line.Truncate(80))}[/]");
+        }
+        
+        return preview.ToString();
     }
 }
