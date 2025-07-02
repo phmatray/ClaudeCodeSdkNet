@@ -21,7 +21,7 @@ public class ListCommand : Command<ListCommand.Settings>
         public bool ListTemplates { get; init; }
     }
 
-    public override int Execute([NotNull] CommandContext context, [NotNull] Settings settings)
+    public override int Execute(CommandContext context, Settings settings)
     {
         if (!settings.ListTypes && !settings.ListTemplates)
         {

@@ -51,7 +51,7 @@ public class BatchCommand : AsyncCommand<BatchCommand.Settings>
         public bool GenerateSummary { get; init; }
     }
 
-    public override async Task<int> ExecuteAsync([NotNull] CommandContext context, [NotNull] Settings settings)
+    public override async Task<int> ExecuteAsync(CommandContext context, Settings settings)
     {
         if (!File.Exists(settings.InputFile))
         {

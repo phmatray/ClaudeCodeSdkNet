@@ -4,12 +4,16 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ClaudeCodeSdkNet", "ClaudeC
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UserStoryGenerator", "UserStoryGenerator\UserStoryGenerator.csproj", "{E70FC7BE-21C5-4341-832E-44B3B96C2FEC}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "_build", "build\_build.csproj", "{1A909E6B-C674-4ED8-8215-3852D7B13323}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{1A909E6B-C674-4ED8-8215-3852D7B13323}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1A909E6B-C674-4ED8-8215-3852D7B13323}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{AC2532E3-E575-4279-B6BD-C4619650FC56}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{AC2532E3-E575-4279-B6BD-C4619650FC56}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{AC2532E3-E575-4279-B6BD-C4619650FC56}.Release|Any CPU.ActiveCfg = Release|Any CPU
