@@ -2,6 +2,20 @@
 
 # Claude Code SDK for .NET
 
+<!-- portfolio-badges:start -->
+<!-- Identity -->
+[![phmatray - ClaudeCodeSdkNet](https://img.shields.io/static/v1?label=phmatray&message=ClaudeCodeSdkNet&color=blue&logo=github)](https://github.com/phmatray/ClaudeCodeSdkNet)
+![Top language](https://img.shields.io/github/languages/top/phmatray/ClaudeCodeSdkNet)
+[![Stars](https://img.shields.io/github/stars/phmatray/ClaudeCodeSdkNet?style=social)](https://github.com/phmatray/ClaudeCodeSdkNet/stargazers)
+[![Forks](https://img.shields.io/github/forks/phmatray/ClaudeCodeSdkNet?style=social)](https://github.com/phmatray/ClaudeCodeSdkNet/network/members)
+
+<!-- Activity -->
+[![Issues](https://img.shields.io/github/issues/phmatray/ClaudeCodeSdkNet)](https://github.com/phmatray/ClaudeCodeSdkNet/issues)
+[![Pull requests](https://img.shields.io/github/issues-pr/phmatray/ClaudeCodeSdkNet)](https://github.com/phmatray/ClaudeCodeSdkNet/pulls)
+[![Last commit](https://img.shields.io/github/last-commit/phmatray/ClaudeCodeSdkNet)](https://github.com/phmatray/ClaudeCodeSdkNet/commits)
+<!-- portfolio-badges:end -->
+
+
 A .NET SDK for interacting with Claude Code CLI, providing a strongly-typed, async-first interface for integrating Claude's AI capabilities into your .NET applications.
 
 ## Features
