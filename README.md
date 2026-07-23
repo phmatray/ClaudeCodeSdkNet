@@ -15,6 +15,27 @@
 [![Last commit](https://img.shields.io/github/last-commit/phmatray/ClaudeCodeSdkNet)](https://github.com/phmatray/ClaudeCodeSdkNet/commits)
 <!-- portfolio-badges:end -->
 
+<!-- portfolio-toc:start -->
+
+## Table of Contents
+
+- [Features](#features)
+- [Installation](#installation)
+- [Prerequisites](#prerequisites)
+- [Quick Start](#quick-start)
+- [Configuration Options](#configuration-options)
+- [Message Types](#message-types)
+- [Content Blocks](#content-blocks)
+- [Error Handling](#error-handling)
+- [Advanced Usage](#advanced-usage)
+- [API Reference](#api-reference)
+- [Tech Stack](#tech-stack)
+- [License](#license)
+- [Contributing](#contributing)
+
+<!-- portfolio-toc:end -->
+
+
 
 A .NET SDK for interacting with Claude Code CLI, providing a strongly-typed, async-first interface for integrating Claude's AI capabilities into your .NET applications.
 
