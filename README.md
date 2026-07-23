@@ -217,6 +217,19 @@ Task<ResultMessage?> QueryResultAsync(
 
 Returns only the final result message.
 
+<!-- portfolio-techstack:start -->
+
+## Tech Stack
+
+- **.NET 9 · .NET 8**
+- System.Text.Json
+- Microsoft.Extensions.Logging.Abstractions
+- Spectre.Console
+- Spectre.Console.Cli
+- Nuke.Common
+
+<!-- portfolio-techstack:end -->
+
 ## License
 
 MIT
