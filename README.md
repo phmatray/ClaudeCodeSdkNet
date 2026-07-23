@@ -1,3 +1,5 @@
+![ClaudeCodeSdkNet banner](.github/banner.png)
+
 # Claude Code SDK for .NET
 
 A .NET SDK for interacting with Claude Code CLI, providing a strongly-typed, async-first interface for integrating Claude's AI capabilities into your .NET applications.
