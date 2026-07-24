@@ -64,7 +64,7 @@ public class GenerateCommand : AsyncCommand<GenerateCommand.Settings>
         public bool Quiet { get; init; }
     }
 
-    public override async Task<int> ExecuteAsync(CommandContext context, Settings settings)
+    protected override async Task<int> ExecuteAsync(CommandContext context, Settings settings, CancellationToken cancellationToken)
     {
         var path = settings.Path ?? Directory.GetCurrentDirectory();
         var outputPath = settings.Output ?? Path.Combine(Directory.GetCurrentDirectory(), "USER_STORIES.md");
