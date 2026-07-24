@@ -8,6 +8,7 @@
 ![Top language](https://img.shields.io/github/languages/top/phmatray/ClaudeCodeSdkNet)
 [![Stars](https://img.shields.io/github/stars/phmatray/ClaudeCodeSdkNet?style=social)](https://github.com/phmatray/ClaudeCodeSdkNet/stargazers)
 [![Forks](https://img.shields.io/github/forks/phmatray/ClaudeCodeSdkNet?style=social)](https://github.com/phmatray/ClaudeCodeSdkNet/network/members)
+[![License](https://img.shields.io/github/license/phmatray/ClaudeCodeSdkNet)](https://github.com/phmatray/ClaudeCodeSdkNet/blob/HEAD/LICENSE)
 
 <!-- Activity -->
 [![Issues](https://img.shields.io/github/issues/phmatray/ClaudeCodeSdkNet)](https://github.com/phmatray/ClaudeCodeSdkNet/issues)
